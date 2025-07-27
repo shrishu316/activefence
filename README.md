@@ -1,4 +1,3 @@
-Here’s a polished and detailed `README.md` for your project, covering all the key parts and usage instructions based on the code you shared:
 
 ---
 
