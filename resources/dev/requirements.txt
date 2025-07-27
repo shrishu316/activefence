@@ -5,5 +5,3 @@ requests
 python-dotenv
 pytest
 # export PYTHONPATH=/media/j_drive/python_assignment
-# /media/j_drive/python_assignment/shubham/bin/python \
-# /media/j_drive/python_assignment/src/main.py
