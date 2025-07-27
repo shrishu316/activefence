@@ -10,6 +10,8 @@ import pandas as pd
 import json
 from llm_analysis import group_titles_by_user, analyze_users_with_llm
 from save_csv import save_llm_results
+import glob
+import os
 
 
 def main():
@@ -32,21 +34,36 @@ def main():
 
     print(f"Collected {len(collected_posts)} posts.")
 
-    raw_csv = 'harmful_posts.csv'
-    save_posts_to_csv(collected_posts, base_filename=raw_csv)
+    save_posts_to_csv(collected_posts, base_filename='harmful_posts.csv')
 
+    # Dynamically find the latest saved harmful_posts.csv_* file
+
+    csv_matches = glob.glob("harmful_posts.csv_*")
+    if not csv_matches:
+        print("No saved CSV found for sentiment analysis.")
+        return
+    latest_csv = max(csv_matches, key=os.path.getctime)
+    print(f"Using latest CSV for sentiment analysis: {latest_csv}")
 
     # -------------------------
     # 2. Sentiment analysis
     # -------------------------
-    df_final = analyze_sentiment(raw_csv)
+    df_final = analyze_sentiment(latest_csv)
     save_problematic_posts(df_final, base_filename='problematic_users.csv')
     
+
+    csv_matches = glob.glob("problematic_users.csv_*")
+    if not csv_matches:
+        print("No saved CSV found for problematic_users.")
+        return
+    latest_csv = max(csv_matches, key=os.path.getctime)
+    print(f"Using latest CSV for problematic_users: {latest_csv}")
+
 
     # -------------------------
     # 3. Load problematic users
     # -------------------------
-    users_df = pd.read_csv('problematic_users.csv')
+    users_df = pd.read_csv(latest_csv)
     print(f"Loaded {len(users_df)} problematic users")
 
     # -------------------------
@@ -55,10 +72,19 @@ def main():
     user_data_df = collect_all_users_data(reddit, users_df, lookback_days=DATA_DAYS_LOOKBACK)
     save_user_data(user_data_df, base_filename='user_data_last_2_months.csv')
 
+    csv_matches = glob.glob("user_data_last_2_months.csv_*")
+    if not csv_matches:
+        print("No saved CSV found for user_data_last_2_months.")
+        return
+    latest_csv = max(csv_matches, key=os.path.getctime)
+    print(f"Using latest CSV for user_data_last_2_months: {latest_csv}")
+
+
+
     # -------------------------
     # 5. Prepare data for LLM
     # -------------------------
-    input_file = 'user_data_last_2_months.csv'
+    input_file = latest_csv
     df = pd.read_csv(input_file)
     print(f"Loaded {len(df)} items from {input_file}")
 

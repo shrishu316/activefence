@@ -130,7 +130,7 @@ def analyze_users_with_llm(grouped_users, max_workers=4):
                     "explanation": "Rate Limit Exceeded"
                 })
 
-            time.sleep(0.1)  # Respect LLM rate limit
+            time.sleep(2)  # Respect LLM rate limit
 
     return results
 

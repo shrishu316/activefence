@@ -10,4 +10,4 @@ TARGET_SUBREDDITS = ["conspiracy", "politics", "askconspiracy"]
 SEARCH_TERMS = ["jew", "zionist", "holocaust denial", "antisemitic"]
 DATA_DAYS_LOOKBACK = 60
 
-# ?bdnkjnaafv n?
+
