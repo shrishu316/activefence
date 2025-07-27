@@ -3,9 +3,9 @@ import os
 
 # load_dotenv()
 
-REDDIT_CLIENT_ID = "TJ7uJwaZBzXFwWRPdyEMAw"
-REDDIT_CLIENT_SECRET = "CCo92jLQv0QUQiRWAxpytePTtDG4Vw"
-GOOGLE_API_KEY = "AIzaSyAyju_Pc5_y0rF9M8BURFz7h9P9C0L9B_0"
+REDDIT_CLIENT_ID = "YOUR_REDDIT_CLIENT_ID"
+REDDIT_CLIENT_SECRET = "YOUR_REDDIT_CLIENT_SECRET"
+GOOGLE_API_KEY = "YOUR_GOOGLE_API_KEY"
 GEMINI_ENDPOINT = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
 USER_AGENT = "academic_research_v1 by u/Active"
 TARGET_SUBREDDITS = ["conspiracy", "politics", "askconspiracy"]
