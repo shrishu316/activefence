@@ -19,19 +19,7 @@ This project collects Reddit posts from targeted subreddits containing potential
 
 ## Project Structure
 
-project/
-│
-├──── resources/
-│           ├── dev/
-│                ├──config.py # Contains API keys, endpoint URLs, and constants
-│
-├──── src/
-       │────reddit_client.py # Initialize authenticated Reddit API client
-       │────search_worker.py # Searches subreddits using target keywords
-       │────user_data_worker.py # Collects user history (posts/comments)
-       │────sentiment_analysis.py # Applies sentiment analysis on Reddit titles
-       │────gemini_llm_analysis.py # Evaluates user content using Google Gemini
-       │────save_csv.py # Utility for exporting data as timestamped CSVs            
+![alt text](image.png)
 
 * `config.py`
   Configuration constants including Reddit API credentials, Google API key, target subreddits, search terms, and data lookback period.
