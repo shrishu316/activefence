@@ -4,4 +4,5 @@ nltk
 requests
 python-dotenv
 pytest
+loguru
 # export PYTHONPATH=/media/j_drive/python_assignment

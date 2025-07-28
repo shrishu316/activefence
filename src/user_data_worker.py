@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import pandas as pd
+from loguru import logger
 
 
 
@@ -82,5 +83,5 @@ def collect_all_users_data(reddit, users_df, lookback_days=60, max_workers=6):
         for future in as_completed(futures):
             all_results.extend(future.result())
 
-    print(f"✅ Collected data for {len(all_results)} items (posts, comments, or errors)")
+    logger.info(f"✅ Collected data for {len(all_results)} items (posts, comments, or errors)")
     return pd.DataFrame(all_results)

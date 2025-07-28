@@ -1,9 +1,10 @@
 # search_worker.py
 from datetime import datetime
+from loguru import logger
 
 def search_and_collect(reddit, subreddit, term, limit=20):
     local_results = []
-    print(f"Searching '{term}' in r/{subreddit}")
+    logger.info(f"Searching '{term}' in r/{subreddit}")
     try:
         for submission in reddit.subreddit(subreddit).search(term, sort='new', limit=limit):
             local_results.append({
@@ -18,5 +19,5 @@ def search_and_collect(reddit, subreddit, term, limit=20):
                 'url': submission.url
             })
     except Exception as e:
-        print(f"Error searching '{term}' in r/{subreddit}: {e}")
+        logger.info(f"Error searching '{term}' in r/{subreddit}: {e}")
     return local_results

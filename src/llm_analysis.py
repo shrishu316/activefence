@@ -3,6 +3,7 @@ import time
 import re
 import csv
 import requests
+from loguru import logger
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from resources.dev.config import GOOGLE_API_KEY, GEMINI_ENDPOINT
@@ -62,10 +63,10 @@ Reddit post titles for user "{username}":
         if text.strip().startswith("```json"):
             text = text.strip().lstrip("```json").rstrip("```").strip()
 
-        print(f"Received response for user: {username}")
+        logger.info(f"Received response for user: {username}")
         return text
     except Exception as e:
-        print(f"LLM request failed for user {username}: {e}")
+        logger.info(f"LLM request failed for user {username}: {e}")
         return None
 
 
@@ -73,7 +74,7 @@ def safe_parse_response(response, username):
     try:
         return json.loads(response)
     except json.JSONDecodeError:
-        print(f"Invalid JSON for {username}, trying to extract JSON block...")
+        logger.info(f"Invalid JSON for {username}, trying to extract JSON block...")
 
         match = re.search(r'\{[\s\S]*?\}', response)
         if match:
@@ -88,7 +89,7 @@ def safe_parse_response(response, username):
             try:
                 return json.loads(json_part)
             except Exception as e2:
-                print(f"Failed to parse extracted JSON for {username}: {e2}")
+                logger.info(f"Failed to parse extracted JSON for {username}: {e2}")
                 return {
                     "username": username,
                     "score": None,
@@ -123,7 +124,7 @@ def analyze_users_with_llm(grouped_users, max_workers=4):
                     "explanation": parsed.get("explanation", response)
                 })
             else:
-                print(f"Empty response for user {username}")
+                logger.info(f"Empty response for user {username}")
                 results.append({
                     "username": username,
                     "score": None,
@@ -157,4 +158,4 @@ if __name__ == "__main__":
                 "explanation": item.get("explanation", "")
             })
 
-    print(f"Saved LLM results to {output_csv}")
+    logger.info(f"Saved LLM results to {output_csv}")

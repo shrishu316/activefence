@@ -12,6 +12,7 @@ from llm_analysis import group_titles_by_user, analyze_users_with_llm
 from save_csv import save_llm_results
 import glob
 import os
+from loguru import logger
 
 
 def main():
@@ -32,7 +33,7 @@ def main():
         for future in as_completed(futures):
             collected_posts.extend(future.result())
 
-    print(f"Collected {len(collected_posts)} posts.")
+    logger.info(f"Collected {len(collected_posts)} posts.")
 
     save_posts_to_csv(collected_posts, base_filename='harmful_posts.csv')
 
@@ -57,14 +58,14 @@ def main():
         print("No saved CSV found for problematic_users.")
         return
     latest_csv = max(csv_matches, key=os.path.getctime)
-    print(f"Using latest CSV for problematic_users: {latest_csv}")
+    logger.info(f"Using latest CSV for problematic_users: {latest_csv}")
 
 
     # -------------------------
     # 3. Load problematic users
     # -------------------------
     users_df = pd.read_csv(latest_csv)
-    print(f"Loaded {len(users_df)} problematic users")
+    logger.info(f"Loaded {len(users_df)} problematic users")
 
     # -------------------------
     # 4. Collect user data (last 2 months)
@@ -74,10 +75,10 @@ def main():
 
     csv_matches = glob.glob("user_data_last_2_months.csv_*")
     if not csv_matches:
-        print("No saved CSV found for user_data_last_2_months.")
+        logger.info("No saved CSV found for user_data_last_2_months.")
         return
     latest_csv = max(csv_matches, key=os.path.getctime)
-    print(f"Using latest CSV for user_data_last_2_months: {latest_csv}")
+    logger.info(f"Using latest CSV for user_data_last_2_months: {latest_csv}")
 
 
 
@@ -86,7 +87,7 @@ def main():
     # -------------------------
     input_file = latest_csv
     df = pd.read_csv(input_file)
-    print(f"Loaded {len(df)} items from {input_file}")
+    logger.info(f"Loaded {len(df)} items from {input_file}")
 
     # Drop empty titles & unneeded columns
     df = df.dropna(subset=['title'])
@@ -95,7 +96,7 @@ def main():
     # Convert to JSON lines
     json_file = 'enriched_data.json'
     df.to_json(json_file, orient='records', lines=True)
-    print(f"Saved to {json_file}")
+    logger.info(f"Saved to {json_file}")
 
     # Load JSON
     with open(json_file, 'r', encoding='utf-8') as f:
@@ -103,7 +104,7 @@ def main():
 
     # Group titles by user
     grouped = group_titles_by_user(enriched_list)
-    print(f"Grouped data for {len(grouped)} users")
+    logger.info(f"Grouped data for {len(grouped)} users")
 
     # -------------------------
     # 6. Run LLM analysis
