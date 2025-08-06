@@ -10,7 +10,6 @@ import pandas as pd
 import json
 from llm_analysis import group_titles_by_user, analyze_users_with_llm
 from save_csv import save_llm_results
-import glob
 import os
 from loguru import logger
 
@@ -35,59 +34,51 @@ def main():
 
     logger.info(f"Collected {len(collected_posts)} posts.")
 
-    save_posts_to_csv(collected_posts, base_filename='harmful_posts.csv')
+    # Save to fixed file (append mode inside function)
+    harmful_posts_file = 'harmful_posts.csv'
+    save_posts_to_csv(collected_posts, base_filename=harmful_posts_file)
 
-    # Dynamically find the latest saved harmful_posts.csv_* file
-
-    csv_matches = glob.glob("harmful_posts.csv_*")
-    if not csv_matches:
+    if not os.path.exists(harmful_posts_file):
         print("No saved CSV found for sentiment analysis.")
         return
-    latest_csv = max(csv_matches, key=os.path.getctime)
-    print(f"Using latest CSV for sentiment analysis: {latest_csv}")
+    print(f"Using CSV for sentiment analysis: {harmful_posts_file}")
 
     # -------------------------
     # 2. Sentiment analysis
     # -------------------------
-    df_final = analyze_sentiment(latest_csv)
-    save_problematic_posts(df_final, base_filename='problematic_users.csv')
-    
+    df_final = analyze_sentiment(harmful_posts_file)
 
-    csv_matches = glob.glob("problematic_users.csv_*")
-    if not csv_matches:
-        print("No saved CSV found for problematic_users.")
+    problematic_users_file = 'problematic_users.csv'
+    save_problematic_posts(df_final, base_filename=problematic_users_file)
+
+    if not os.path.exists(problematic_users_file):
+        print("No saved CSV found for problematic users.")
         return
-    latest_csv = max(csv_matches, key=os.path.getctime)
-    logger.info(f"Using latest CSV for problematic_users: {latest_csv}")
-
+    print(f"Using CSV for problematic users: {problematic_users_file}")
 
     # -------------------------
     # 3. Load problematic users
     # -------------------------
-    users_df = pd.read_csv(latest_csv)
+    users_df = pd.read_csv(problematic_users_file)
     logger.info(f"Loaded {len(users_df)} problematic users")
 
     # -------------------------
     # 4. Collect user data (last 2 months)
     # -------------------------
+    user_data_file = 'user_data_last_2_months.csv'
     user_data_df = collect_all_users_data(reddit, users_df, lookback_days=DATA_DAYS_LOOKBACK)
-    save_user_data(user_data_df, base_filename='user_data_last_2_months.csv')
+    save_user_data(user_data_df, base_filename=user_data_file)
 
-    csv_matches = glob.glob("user_data_last_2_months.csv_*")
-    if not csv_matches:
+    if not os.path.exists(user_data_file):
         logger.info("No saved CSV found for user_data_last_2_months.")
         return
-    latest_csv = max(csv_matches, key=os.path.getctime)
-    logger.info(f"Using latest CSV for user_data_last_2_months: {latest_csv}")
-
-
+    logger.info(f"Using CSV for user_data_last_2_months: {user_data_file}")
 
     # -------------------------
     # 5. Prepare data for LLM
     # -------------------------
-    input_file = latest_csv
-    df = pd.read_csv(input_file)
-    logger.info(f"Loaded {len(df)} items from {input_file}")
+    df = pd.read_csv(user_data_file)
+    logger.info(f"Loaded {len(df)} items from {user_data_file}")
 
     # Drop empty titles & unneeded columns
     df = df.dropna(subset=['title'])
@@ -109,9 +100,9 @@ def main():
     # -------------------------
     # 6. Run LLM analysis
     # -------------------------
+    llm_results_file = 'llm_analysis_results.csv'
     llm_results = analyze_users_with_llm(grouped)
-    save_llm_results(llm_results, base_filename='llm_analysis_results.csv')
-
+    save_llm_results(llm_results, base_filename=llm_results_file)
 
 if __name__ == '__main__':
     main()

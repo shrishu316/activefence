@@ -7,6 +7,8 @@ from loguru import logger
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from resources.dev.config import GOOGLE_API_KEY, GEMINI_ENDPOINT
+from ratelimit import limits, sleep_and_retry
+from requests.exceptions import RequestException
 
 
 def group_titles_by_user(enriched_list):
@@ -18,7 +20,8 @@ def group_titles_by_user(enriched_list):
             user_titles[user].append(title)
     return dict(user_titles)
 
-
+@sleep_and_retry
+@limits(calls=60, period=60)
 def query_gemini(username, activity_list):
     prompt = f"""
 You are an expert in hate speech detection and social media analysis.
@@ -53,22 +56,25 @@ Reddit post titles for user "{username}":
         ]
     }
 
-    try:
-        response = requests.post(GEMINI_ENDPOINT, headers=headers, json=payload, timeout=30)
-        response.raise_for_status()
-        data = response.json()
-        text = data["candidates"][0]["content"]["parts"][0]["text"]
+    for attempt in range(3): 
+        try:
+            response = requests.post(GEMINI_ENDPOINT, headers=headers, json=payload, timeout=30)
+            response.raise_for_status()
+            data = response.json()
+            text = data["candidates"][0]["content"]["parts"][0]["text"]
 
-        # Strip markdown formatting like ```json
-        if text.strip().startswith("```json"):
-            text = text.strip().lstrip("```json").rstrip("```").strip()
+            if text.strip().startswith("```json"):
+                text = text.strip().lstrip("```json").rstrip("```").strip()
 
-        logger.info(f"Received response for user: {username}")
-        return text
-    except Exception as e:
-        logger.info(f"LLM request failed for user {username}: {e}")
-        return None
+            logger.info(f"✅ LLM response OK for user: {username}")
+            return text
 
+        except RequestException as e:
+            logger.warning(f"❌ Attempt {attempt + 1}: LLM request failed for {username}: {e}")
+            time.sleep(2 ** attempt)
+
+    logger.error(f"⛔ Final failure for user {username} after 3 attempts.")
+    return None
 
 def safe_parse_response(response, username):
     try:
@@ -80,7 +86,7 @@ def safe_parse_response(response, username):
         if match:
             json_part = match.group(0).strip()
 
-            # Heuristic patch for incomplete explanation
+            
             if '"explanation":' in json_part and not json_part.endswith('"}'):
                 if not json_part.endswith('"'):
                     json_part += '"'
@@ -102,39 +108,28 @@ def safe_parse_response(response, username):
                 "explanation": "No JSON found in response"
             }
 
-
-def analyze_users_with_llm(grouped_users, max_workers=4):
+def analyze_users_with_llm(grouped_users):
     results = []
 
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = {
-            executor.submit(query_gemini, username, titles): username
-            for username, titles in grouped_users.items()
-        }
+    for username, titles in grouped_users.items():
+        response = query_gemini(username, titles)
 
-        for future in as_completed(futures):
-            username = futures[future]
-            response = future.result()
-
-            if response:
-                parsed = safe_parse_response(response, username)
-                results.append({
-                    "username": parsed.get("username", username),
-                    "score": parsed.get("score"),
-                    "explanation": parsed.get("explanation", response)
-                })
-            else:
-                logger.info(f"Empty response for user {username}")
-                results.append({
-                    "username": username,
-                    "score": None,
-                    "explanation": "Rate Limit Exceeded"
-                })
-
-            time.sleep(2)  # Respect LLM rate limit
+        if response:
+            parsed = safe_parse_response(response, username)
+            results.append({
+                "username": parsed.get("username", username),
+                "score": parsed.get("score"),
+                "explanation": parsed.get("explanation", response)
+            })
+        else:
+            logger.info(f"Empty response for user {username}")
+            results.append({
+                "username": username,
+                "score": None,
+                "explanation": "Rate Limit Exceeded"
+            })
 
     return results
-
 
 if __name__ == "__main__":
 
@@ -159,3 +154,4 @@ if __name__ == "__main__":
             })
 
     logger.info(f"Saved LLM results to {output_csv}")
+

@@ -5,4 +5,6 @@ requests
 python-dotenv
 pytest
 loguru
+ratelimit
+
 # export PYTHONPATH=/media/j_drive/python_assignment

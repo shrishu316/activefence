@@ -4,9 +4,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import pandas as pd
 from loguru import logger
 
-
-
-
 def collect_user_data(reddit, user_row, lookback_days=60):
     user_name = user_row['author']
     user_id = user_row['id']
@@ -69,7 +66,6 @@ def collect_user_data(reddit, user_row, lookback_days=60):
         })
 
     return collected
-
 
 def collect_all_users_data(reddit, users_df, lookback_days=60, max_workers=6):
     all_results = []
