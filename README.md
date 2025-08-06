@@ -109,10 +109,10 @@ This executes the following steps:
 
 ## Output Files
 
-* `harmful_posts_YYYYMMDD_HHMMSS.csv` — All posts collected matching search criteria.
-* `problematic_users_YYYYMMDD_HHMMSS.csv` — Posts classified as problematic.
-* `user_data_last_2_months_YYYYMMDD_HHMMSS.csv` — User submission and comment data.
-* `llm_analysis_results_YYYYMMDD_HHMMSS.csv` — Gemini LLM scores and explanations for each user.
+* `harmful_posts.csv` — All posts collected matching search criteria.
+* `problematic_users.csv` — Posts classified as problematic.
+* `user_data_last_2_months.csv` — User submission and comment data.
+* `llm_analysis_results.csv` — Gemini LLM scores and explanations for each user.
 
 ---
 
